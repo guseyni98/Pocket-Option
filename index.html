@@ -3,23 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>GPT trading — Pocket Option Mini App</title>
+  <title>GPT Trading Pro — Pocket Option Terminal</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #070a11;
-      --card: #0e1420;
-      --card-2: #151e30;
-      --card-3: #1c273d;
+      --bg: #05070c;
+      --surface: #0b0f19;
+      --surface-2: #121827;
+      --surface-3: #192236;
       --border: rgba(255, 255, 255, 0.08);
+      --border-hi: rgba(255, 255, 255, 0.16);
       --text: #f8fafc;
-      --muted: #8fa1bf;
-      --blue: #3b82f6;
-      --green: #16a34a;
-      --green-2: #22c55e;
-      --red: #dc2626;
-      --red-2: #ef4444;
-      --amber: #f59e0b;
+      --muted: #8b9bb4;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.32);
+      --buy: #10b981;
+      --buy-bright: #34d399;
+      --buy-soft: rgba(16, 185, 129, 0.14);
+      --sell: #ef4444;
+      --sell-bright: #f87171;
+      --sell-soft: rgba(239, 68, 68, 0.15);
+      --gold: #f59e0b;
     }
 
     * {
@@ -30,30 +34,35 @@
     body {
       margin: 0;
       padding: 12px;
-      background: radial-gradient(circle at top, #131d33 0%, var(--bg) 62%);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(37, 99, 235, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 85% 10%, rgba(16, 185, 129, 0.10) 0%, transparent 40%),
+        var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
       min-height: 100vh;
     }
 
-    .wrap {
-      max-width: 520px;
+    .terminal {
+      max-width: 540px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      padding-bottom: 24px;
+      gap: 11px;
+      padding-bottom: 28px;
     }
 
-    .topbar {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 10px 12px;
+    /* Premium Header */
+    .header {
+      background: linear-gradient(180deg, rgba(18, 24, 39, 0.96), rgba(11, 15, 25, 0.96));
+      border: 1px solid var(--border-hi);
+      border-radius: 18px;
+      padding: 11px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 10px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
     }
 
     .brand {
@@ -62,263 +71,371 @@
       gap: 10px;
     }
 
-    .brand-badge {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #2563eb, #10b981);
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 50%, #10b981 100%);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      font-size: 13px;
+      font-size: 14px;
       color: #fff;
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
       flex-shrink: 0;
     }
 
     .brand-title {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 800;
+      letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pro-tag {
+      font-size: 9.5px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #090d16;
+      letter-spacing: 0.5px;
     }
 
     .brand-sub {
       font-size: 10.5px;
       color: var(--muted);
+      margin-top: 1px;
     }
 
-    .top-btns {
+    .header-right {
       display: flex;
+      align-items: center;
       gap: 6px;
     }
 
-    .pill-btn {
-      background: var(--card-2);
-      color: var(--text);
+    .clock-pill {
+      background: var(--surface-2);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 6px 9px;
-      font-size: 11px;
+      text-align: right;
+    }
+
+    .clock-val {
+      font-size: 12px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: #e2e8f0;
+    }
+
+    .clock-lbl {
+      font-size: 9px;
+      color: var(--buy-bright);
       font-weight: 700;
-      cursor: pointer;
     }
 
-    .pill-btn.active {
-      background: rgba(59, 130, 246, 0.2);
-      border-color: var(--blue);
-      color: #93c5fd;
-    }
-
+    /* Card Container */
     .card {
-      background: var(--card);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 12px;
+      border-radius: 18px;
+      padding: 13px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 11px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
 
     .sec-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 5px;
     }
 
-    .sec-lbl {
+    .sec-title {
       font-size: 11px;
       font-weight: 800;
-      color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.7px;
+      color: var(--muted);
     }
 
-    .otc-badge {
-      font-size: 10px;
+    .count-pill {
+      font-size: 10.5px;
       font-weight: 800;
       padding: 2px 8px;
       border-radius: 999px;
-      background: rgba(245, 158, 11, 0.14);
-      color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.3);
+      background: rgba(59, 130, 246, 0.14);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.28);
     }
 
-    .cat-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 5px;
+    /* Horizontal Scrollable Category Tabs (All Pocket Option Categories) */
+    .cat-strip {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
     }
 
-    .cat-btn {
-      background: var(--card-2);
+    .cat-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cat-chip {
+      flex: 0 0 auto;
+      background: var(--surface-2);
       color: var(--muted);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 4px;
-      font-size: 11px;
+      border-radius: 11px;
+      padding: 8px 11px;
+      font-size: 11.5px;
       font-weight: 700;
       cursor: pointer;
-      transition: 0.15s;
+      transition: all 0.15s ease;
+      white-space: nowrap;
     }
 
-    .cat-btn.active {
-      background: var(--blue);
+    .cat-chip.active {
+      background: var(--accent);
       color: #fff;
       border-color: transparent;
+      box-shadow: 0 3px 12px var(--accent-glow);
     }
 
-    .search-box {
-      position: relative;
+    /* Search & Favorite Row */
+    .search-row {
       display: flex;
+      gap: 7px;
       align-items: center;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
     }
 
     input, select {
       width: 100%;
-      background: var(--card-2);
+      background: var(--surface-2);
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 11px;
+      border-radius: 12px;
       padding: 10px 12px;
       font-size: 13.5px;
       font-weight: 600;
       outline: none;
+      transition: border-color 0.15s;
     }
 
     input {
-      padding-right: 34px;
+      padding-right: 32px;
     }
 
     input:focus, select:focus {
-      border-color: var(--blue);
+      border-color: var(--accent);
     }
 
-    .clear-x {
+    .clear-btn {
       position: absolute;
-      right: 10px;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
       background: transparent;
       border: none;
       color: var(--muted);
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 13px;
       cursor: pointer;
-      padding: 2px 6px;
+      padding: 4px;
     }
 
-    .pair-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--card-2);
+    .fav-toggle {
+      width: 42px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: 11px;
-      padding: 8px 11px;
+      color: var(--muted);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .fav-toggle.saved {
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.45);
+      background: rgba(245, 158, 11, 0.14);
+    }
+
+    /* Selected Asset Bar */
+    .asset-info-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 12px;
       font-size: 12px;
     }
 
-    .payout {
-      color: #4ade80;
-      font-weight: 800;
+    .asset-name-wrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-weight: 700;
     }
 
-    .tf-grid {
+    .otc-pill {
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .live-pill {
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .payout-val {
+      color: var(--buy-bright);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    /* Expiration Time Grid */
+    .exp-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 6px;
     }
 
-    .tf-btn {
-      background: var(--card-2);
+    .exp-btn {
+      background: var(--surface-2);
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 11px;
       padding: 8px 4px;
       font-size: 12px;
       font-weight: 800;
       cursor: pointer;
       transition: 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
     }
 
-    .tf-btn.active {
+    .exp-btn span.sub-t {
+      font-size: 9.5px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .exp-btn.active {
       background: rgba(59, 130, 246, 0.22);
-      border-color: var(--blue);
+      border-color: var(--accent);
       color: #bfdbfe;
     }
 
-    /* Signal Stage */
-    .stage {
+    .exp-btn.active span.sub-t {
+      color: #93c5fd;
+    }
+
+    /* Main Signal Stage */
+    .signal-stage {
       border-radius: 16px;
-      padding: 14px;
+      padding: 15px;
       border: 1px solid var(--border);
-      background: var(--card-2);
+      background: var(--surface-2);
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      transition: 0.2s ease;
+      gap: 11px;
+      transition: all 0.22s ease;
     }
 
-    .stage.sell {
-      background: linear-gradient(180deg, rgba(220, 38, 38, 0.18) 0%, rgba(15, 21, 34, 0.96) 100%);
-      border-color: rgba(239, 68, 68, 0.42);
+    .signal-stage.buy {
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.18) 0%, rgba(12, 17, 29, 0.96) 100%);
+      border-color: rgba(16, 185, 129, 0.45);
+      box-shadow: 0 8px 28px rgba(16, 185, 129, 0.12);
     }
 
-    .stage.buy {
-      background: linear-gradient(180deg, rgba(22, 163, 74, 0.18) 0%, rgba(15, 21, 34, 0.96) 100%);
-      border-color: rgba(34, 197, 94, 0.42);
+    .signal-stage.sell {
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.18) 0%, rgba(12, 17, 29, 0.96) 100%);
+      border-color: rgba(239, 68, 68, 0.45);
+      box-shadow: 0 8px 28px rgba(239, 68, 68, 0.12);
     }
 
-    .stage-top {
+    .stage-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 11px;
     }
 
-    .dir-circle {
-      width: 52px;
-      height: 52px;
+    .dir-orb {
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 900;
       flex-shrink: 0;
     }
 
-    .dir-circle.sell {
-      background: var(--red);
+    .dir-orb.buy {
+      background: linear-gradient(135deg, #10b981, #059669);
       color: #fff;
-      box-shadow: 0 0 20px rgba(239, 68, 68, 0.45);
+      box-shadow: 0 0 24px rgba(16, 185, 129, 0.45);
     }
 
-    .dir-circle.buy {
-      background: var(--green);
+    .dir-orb.sell {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
       color: #fff;
-      box-shadow: 0 0 20px rgba(34, 197, 94, 0.45);
+      box-shadow: 0 0 24px rgba(239, 68, 68, 0.45);
     }
 
-    .dir-circle.scan {
-      background: rgba(59, 130, 246, 0.22);
+    .dir-orb.scan {
+      background: rgba(59, 130, 246, 0.2);
       color: #93c5fd;
       font-size: 18px;
     }
 
-    .sig-info {
+    .sig-main-info {
       flex: 1;
     }
 
-    .sig-word {
-      font-size: 26px;
+    .sig-direction {
+      font-size: 28px;
       font-weight: 900;
       line-height: 1.05;
+      letter-spacing: 0.6px;
     }
 
-    .sig-word.sell { color: #f87171; }
-    .sig-word.buy { color: #4ade80; }
-    .sig-word.scan { color: #93c5fd; font-size: 16px; }
+    .sig-direction.buy { color: var(--buy-bright); }
+    .sig-direction.sell { color: var(--sell-bright); }
+    .sig-direction.scan { color: #93c5fd; font-size: 17px; }
 
-    .enter-sub {
+    .sig-window {
       font-size: 12px;
       color: #e2e8f0;
       margin-top: 3px;
@@ -326,41 +443,41 @@
       font-variant-numeric: tabular-nums;
     }
 
-    .timer-box {
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid var(--border);
-      border-radius: 11px;
-      padding: 7px 10px;
+    .countdown-box {
+      background: rgba(5, 7, 12, 0.55);
+      border: 1px solid var(--border-hi);
+      border-radius: 12px;
+      padding: 8px 11px;
       text-align: center;
-      min-width: 74px;
+      min-width: 76px;
     }
 
-    .timer-num {
-      font-size: 15px;
+    .cd-time {
+      font-size: 16px;
       font-weight: 900;
       font-variant-numeric: tabular-nums;
     }
 
-    .timer-lbl {
-      font-size: 9px;
+    .cd-tag {
+      font-size: 9.5px;
       color: var(--muted);
-      text-transform: uppercase;
+      font-weight: 700;
     }
 
-    .scan-status {
+    .scan-line {
       font-size: 12px;
       color: #93c5fd;
       font-weight: 600;
       min-height: 16px;
     }
 
-    .strength-wrap {
+    .strength-group {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 5px;
     }
 
-    .strength-top {
+    .strength-labels {
       display: flex;
       justify-content: space-between;
       font-size: 11px;
@@ -368,76 +485,91 @@
       color: var(--muted);
     }
 
-    .bar-bg {
+    .meter-track {
       height: 8px;
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: 99px;
+      background: rgba(5, 7, 12, 0.55);
+      border-radius: 999px;
       overflow: hidden;
     }
 
-    .bar-val {
+    .meter-fill {
       height: 100%;
-      border-radius: 99px;
+      border-radius: 999px;
       transition: width 0.35s ease;
     }
 
-    .po-banner {
-      background: rgba(0, 0, 0, 0.28);
+    .exec-banner {
+      background: rgba(5, 7, 12, 0.45);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 9px 11px;
+      padding: 9px 12px;
       font-size: 12.5px;
       font-weight: 700;
       text-align: center;
+      color: #f1f5f9;
     }
 
-    .chart-wrap {
-      background: #090e17;
+    /* Live Mini Chart */
+    .chart-box {
+      background: #070b13;
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 6px;
+      border-radius: 13px;
+      padding: 7px;
     }
 
     canvas {
       width: 100%;
-      height: 92px;
+      height: 96px;
       display: block;
     }
 
-    .metrics {
+    /* Technical Readings Grid */
+    .readings-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      font-size: 12px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 7px;
     }
 
-    .metric-box {
-      background: var(--card-2);
+    .reading-card {
+      background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: 11px;
-      padding: 8px 10px;
+      border-radius: 12px;
+      padding: 9px 11px;
     }
 
-    .m-lbl { font-size: 10px; color: var(--muted); }
-    .m-val { font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .r-label {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 600;
+    }
 
-    .btn-main {
+    .r-val {
+      font-size: 12.5px;
+      font-weight: 800;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Primary & Secondary Action Buttons */
+    .btn-primary {
       width: 100%;
       border: none;
-      border-radius: 13px;
-      padding: 13px;
-      font-size: 14px;
+      border-radius: 14px;
+      padding: 13.5px;
+      font-size: 14.5px;
       font-weight: 800;
-      background: var(--green);
+      background: linear-gradient(135deg, #16a34a, #15803d);
       color: #fff;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgba(22, 163, 74, 0.35);
-      transition: 0.12s;
+      box-shadow: 0 5px 18px rgba(22, 163, 74, 0.35);
+      transition: transform 0.1s ease;
     }
 
-    .btn-main:active { transform: scale(0.98); }
+    .btn-primary:active {
+      transform: scale(0.985);
+    }
 
-    .btn-grid {
+    .btn-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 7px;
@@ -446,184 +578,192 @@
     .btn-sec {
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 10px;
+      padding: 10.5px;
       font-size: 12.5px;
       font-weight: 700;
-      background: var(--card-2);
+      background: var(--surface-2);
       color: var(--text);
       cursor: pointer;
     }
 
-    .btn-sec.send {
+    .btn-sec.telegram {
       background: rgba(59, 130, 246, 0.16);
       border-color: rgba(59, 130, 246, 0.35);
       color: #93c5fd;
     }
 
+    /* Recent Signals */
     .history-list {
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
 
-    .history-row {
+    .history-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: var(--card-2);
+      background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 10px;
+      border-radius: 11px;
+      padding: 8.5px 11px;
       font-size: 12px;
     }
 
-    .h-buy { color: #4ade80; font-weight: 800; }
-    .h-sell { color: #f87171; font-weight: 800; }
+    .tag-buy { color: var(--buy-bright); font-weight: 800; }
+    .tag-sell { color: var(--sell-bright); font-weight: 800; }
 
     .disclaimer {
       font-size: 10.5px;
       color: var(--muted);
       text-align: center;
-      line-height: 1.4;
-      padding: 2px 6px;
+      line-height: 1.45;
+      padding: 2px 8px;
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
+  <div class="terminal">
+    <!-- HEADER -->
+    <div class="header">
       <div class="brand">
-        <div class="brand-badge">GT</div>
+        <div class="brand-logo">GT</div>
         <div>
-          <div class="brand-title">GPT trading</div>
-          <div class="brand-sub">Pocket Option Style · Created by Guseyni</div>
+          <div class="brand-title">GPT trading <span class="pro-tag">PRO</span></div>
+          <div class="brand-sub">Pocket Option Terminal · Created by Guseyni</div>
         </div>
       </div>
-      <div class="top-btns">
-        <button type="button" class="pill-btn active" id="modeBtn">OTC + Live</button>
-        <button type="button" class="pill-btn" id="helpBtn">Help</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div>
-        <div class="sec-head">
-          <span class="sec-lbl">Bazar kateqoriyası</span>
-          <span class="otc-badge" id="catCountBadge">28 Aktiv</span>
-        </div>
-        <div class="cat-grid" id="catGrid">
-          <button type="button" class="cat-btn active" data-cat="all">Hamısı</button>
-          <button type="button" class="cat-btn" data-cat="otc">Valyuta OTC</button>
-          <button type="button" class="cat-btn" data-cat="crypto">Kripto</button>
-          <button type="button" class="cat-btn" data-cat="stocks">Səhmlər</button>
-        </div>
-      </div>
-
-      <div>
-        <div class="sec-head">
-          <span class="sec-lbl">Cütlük və ya səhm seçimi</span>
-          <span style="font-size:11px; color:var(--muted);" id="clockText">--:--:--</span>
-        </div>
-        <div class="search-box">
-          <input type="text" id="searchInput" placeholder="Axtar: EUR/JPY, Apple, Tesla, NVIDIA, BTC, Gold..." autocomplete="off" />
-          <button type="button" class="clear-x" id="clearSearchBtn" title="Təmizlə">✕</button>
-        </div>
-        <div style="height:7px;"></div>
-        <select id="pairSelect"></select>
-        <div style="height:7px;"></div>
-        <div class="pair-meta">
-          <span id="selectedLabel">Seçilib: EUR/JPY OTC</span>
-          <span class="payout" id="payoutLabel">+92% Payout</span>
-        </div>
-      </div>
-
-      <div>
-        <div class="sec-head">
-          <span class="sec-lbl">Expiration time (Vaxt intervalı)</span>
-          <span style="font-size:11px; color:var(--muted);" id="tfActiveLabel">5 sec</span>
-        </div>
-        <div class="tf-grid" id="tfGrid">
-          <button type="button" class="tf-btn" data-sec="3" data-code="S3" data-lbl="3 sec">S3</button>
-          <button type="button" class="tf-btn active" data-sec="5" data-code="S5" data-lbl="5 sec">S5</button>
-          <button type="button" class="tf-btn" data-sec="15" data-code="S15" data-lbl="15 sec">S15</button>
-          <button type="button" class="tf-btn" data-sec="30" data-code="S30" data-lbl="30 sec">S30</button>
-          <button type="button" class="tf-btn" data-sec="60" data-code="M1" data-lbl="1 min">M1</button>
-          <button type="button" class="tf-btn" data-sec="300" data-code="M5" data-lbl="5 min">M5</button>
-          <button type="button" class="tf-btn" data-sec="900" data-code="M15" data-lbl="15 min">M15</button>
-          <button type="button" class="tf-btn" data-sec="3600" data-code="H1" data-lbl="1 hour">H1</button>
+      <div class="header-right">
+        <div class="clock-pill">
+          <div class="clock-val" id="bakuClock">--:--:--</div>
+          <div class="clock-lbl">● BAKI (UTC+4)</div>
         </div>
       </div>
     </div>
 
+    <!-- MARKET & EXPIRATION CONTROLS -->
     <div class="card">
-      <div class="stage sell" id="stageBox">
-        <div class="stage-top">
-          <div class="dir-circle sell" id="dirIcon">↘</div>
-          <div class="sig-info">
-            <div class="sig-word sell" id="sigWord">SELL</div>
-            <div class="enter-sub" id="enterSub">Enter within 00:05 · 5 sec</div>
-          </div>
-          <div class="timer-box">
-            <div class="timer-num" id="timerNum">00:05</div>
-            <div class="timer-lbl" id="timerCode">S5</div>
-          </div>
-        </div>
-
-        <div class="scan-status" id="scanStatus"></div>
-
-        <div class="strength-wrap">
-          <div class="strength-top">
-            <span>Signal strength</span>
-            <span id="strengthText">medium</span>
-          </div>
-          <div class="bar-bg">
-            <div class="bar-val" id="strengthBar" style="width: 65%; background: linear-gradient(90deg, #f59e0b, #ef4444);"></div>
-          </div>
-        </div>
-
-        <div class="po-banner" id="poBanner">Open SELL for 5 sec on PocketOption</div>
+      <div class="sec-head">
+        <span class="sec-title">1. Bazar Bölməsi</span>
+        <span class="count-pill" id="assetCounter">0 Aktiv</span>
       </div>
 
-      <div class="chart-wrap">
-        <canvas id="chartCanvas" width="460" height="92"></canvas>
+      <div class="cat-strip" id="catStrip">
+        <button type="button" class="cat-chip active" data-cat="all">🌐 Hamısı</button>
+        <button type="button" class="cat-chip" data-cat="fav">⭐ Sevimlilər</button>
+        <button type="button" class="cat-chip" data-cat="forex">💱 Valyuta / OTC</button>
+        <button type="button" class="cat-chip" data-cat="crypto">₿ Kripto</button>
+        <button type="button" class="cat-chip" data-cat="stocks">📈 Səhmlər</button>
+        <button type="button" class="cat-chip" data-cat="commodities">🥇 Əmtəə (Qızıl/Neft)</button>
+        <button type="button" class="cat-chip" data-cat="indices">📊 İndekslər</button>
       </div>
 
-      <div class="metrics">
-        <div class="metric-box">
-          <div class="m-lbl">RSI (14)</div>
-          <div class="m-val" id="mRsi">41.2</div>
+      <div class="search-row">
+        <div class="search-wrap">
+          <input type="text" id="searchBox" placeholder="Axtar: EUR/JPY, Gold, Apple, Tesla, US100, BTC..." autocomplete="off" />
+          <button type="button" class="clear-btn" id="clearSearch" title="Təmizlə">✕</button>
         </div>
-        <div class="metric-box">
-          <div class="m-lbl">Moving Averages</div>
-          <div class="m-val" id="mEma">EMA9 &lt; EMA21</div>
+        <button type="button" class="fav-toggle" id="favBtn" title="Sevimlilərə əlavə et">☆</button>
+      </div>
+
+      <select id="assetDropdown"></select>
+
+      <div class="asset-info-bar">
+        <div class="asset-name-wrap">
+          <span id="chosenAssetName">EUR/JPY OTC</span>
+          <span class="otc-pill" id="chosenAssetType">OTC</span>
         </div>
-        <div class="metric-box">
-          <div class="m-lbl">Live / OTC Quote</div>
-          <div class="m-val" id="mPrice">164.820</div>
+        <span class="payout-val" id="chosenPayout">+92% Payout</span>
+      </div>
+
+      <div class="sec-head" style="margin-top: 2px;">
+        <span class="sec-title">2. Expiration Time (Müddət)</span>
+        <span style="font-size:11px; color:var(--muted); font-weight:700;" id="expDisplay">5 sec</span>
+      </div>
+
+      <div class="exp-grid" id="expGrid">
+        <button type="button" class="exp-btn" data-sec="3" data-code="S3" data-lbl="3 sec">S3<span class="sub-t">3 san</span></button>
+        <button type="button" class="exp-btn active" data-sec="5" data-code="S5" data-lbl="5 sec">S5<span class="sub-t">5 san</span></button>
+        <button type="button" class="exp-btn" data-sec="15" data-code="S15" data-lbl="15 sec">S15<span class="sub-t">15 san</span></button>
+        <button type="button" class="exp-btn" data-sec="30" data-code="S30" data-lbl="30 sec">S30<span class="sub-t">30 san</span></button>
+        <button type="button" class="exp-btn" data-sec="60" data-code="M1" data-lbl="1 min">M1<span class="sub-t">1 dəq</span></button>
+        <button type="button" class="exp-btn" data-sec="300" data-code="M5" data-lbl="5 min">M5<span class="sub-t">5 dəq</span></button>
+        <button type="button" class="exp-btn" data-sec="900" data-code="M15" data-lbl="15 min">M15<span class="sub-t">15 dəq</span></button>
+        <button type="button" class="exp-btn" data-sec="3600" data-code="H1" data-lbl="1 hour">H1<span class="sub-t">1 saat</span></button>
+      </div>
+    </div>
+
+    <!-- SIGNAL EXECUTION STAGE -->
+    <div class="card">
+      <div class="signal-stage sell" id="signalStage">
+        <div class="stage-header">
+          <div class="dir-orb sell" id="dirOrb">↘</div>
+          <div class="sig-main-info">
+            <div class="sig-direction sell" id="sigDirection">SELL</div>
+            <div class="sig-window" id="sigWindow">Enter within 00:05 · 5 sec</div>
+          </div>
+          <div class="countdown-box">
+            <div class="cd-time" id="cdTime">00:05</div>
+            <div class="cd-tag" id="cdTag">S5</div>
+          </div>
         </div>
-        <div class="metric-box">
-          <div class="m-lbl">Real-time Readings</div>
-          <div class="m-val" id="mTrend">Bearish pressure</div>
+
+        <div class="scan-line" id="scanLine"></div>
+
+        <div class="strength-group">
+          <div class="strength-labels">
+            <span>Signal strength (Güc)</span>
+            <span id="strengthVal">strong (84%)</span>
+          </div>
+          <div class="meter-track">
+            <div class="meter-fill" id="meterFill" style="width: 84%; background: linear-gradient(90deg, #f59e0b, #ef4444);"></div>
+          </div>
+        </div>
+
+        <div class="exec-banner" id="execBanner">Open SELL for 5 sec on PocketOption</div>
+      </div>
+
+      <div class="chart-box">
+        <canvas id="priceCanvas" width="480" height="96"></canvas>
+      </div>
+
+      <div class="readings-grid">
+        <div class="reading-card">
+          <div class="r-label">RSI (14)</div>
+          <div class="r-val" id="valRsi">38.4</div>
+        </div>
+        <div class="reading-card">
+          <div class="r-label">EMA Trend (9 / 21)</div>
+          <div class="r-val" id="valEma">EMA9 &lt; EMA21</div>
+        </div>
+        <div class="reading-card">
+          <div class="r-label">Quote (Qiymət)</div>
+          <div class="r-val" id="valQuote">164.820</div>
+        </div>
+        <div class="reading-card">
+          <div class="r-label">MACD &amp; Momentum</div>
+          <div class="r-val" id="valMacd">Bearish · -0.0014</div>
         </div>
       </div>
 
-      <button type="button" class="btn-main" id="refreshBtn">Refresh signal</button>
+      <button type="button" class="btn-primary" id="refreshBtn">⚡ Refresh signal (Yeni Analiz)</button>
 
-      <div class="btn-grid">
-        <button type="button" class="btn-sec send" id="sendBotBtn">📩 Send to Bot</button>
+      <div class="btn-row">
+        <button type="button" class="btn-sec telegram" id="sendBotBtn">📩 Send to Bot</button>
         <button type="button" class="btn-sec" id="resetBtn">↩️ Back / Reset</button>
       </div>
     </div>
 
+    <!-- RECENT SIGNALS -->
     <div class="card">
       <div class="sec-head">
-        <span class="sec-lbl">Recent signals (Son analizlər)</span>
+        <span class="sec-title">Recent signals (Son siqnallar)</span>
       </div>
       <div class="history-list" id="historyList"></div>
     </div>
 
     <div class="disclaimer">
-      For educational &amp; analytical purposes only. Not financial advice (NFA). Trading carries risk.
+      For analytical and educational use only. Not financial advice (NFA). Trading binary/digital options involves high risk.
     </div>
   </div>
 
@@ -634,41 +774,103 @@
       tg.expand();
     }
 
-    const ASSETS = [
-      // Valyuta OTC və Live
-      { id: "eurjpy_otc", name: "EUR/JPY OTC", cat: "otc", payout: "+92%", symbol: null, price: 164.820, digits: 3 },
-      { id: "eurusd_otc", name: "EUR/USD OTC", cat: "otc", payout: "+92%", symbol: "EURUSDT", price: 1.08420, digits: 5 },
-      { id: "gbpusd_otc", name: "GBP/USD OTC", cat: "otc", payout: "+91%", symbol: "GBPUSDT", price: 1.27180, digits: 5 },
-      { id: "usdjpy_otc", name: "USD/JPY OTC", cat: "otc", payout: "+90%", symbol: null, price: 153.440, digits: 3 },
-      { id: "audusd_otc", name: "AUD/USD OTC", cat: "otc", payout: "+92%", symbol: "AUDUSDT", price: 0.65380, digits: 5 },
-      { id: "audcad_otc", name: "AUD/CAD OTC", cat: "otc", payout: "+89%", symbol: null, price: 0.91040, digits: 5 },
-      { id: "gbpjpy_otc", name: "GBP/JPY OTC", cat: "otc", payout: "+91%", symbol: null, price: 195.120, digits: 3 },
-      { id: "eurgbp_otc", name: "EUR/GBP OTC", cat: "otc", payout: "+88%", symbol: null, price: 0.85260, digits: 5 },
-      { id: "usdcad_otc", name: "USD/CAD OTC", cat: "otc", payout: "+90%", symbol: null, price: 1.39250, digits: 5 },
-      { id: "nzdusd_otc", name: "NZD/USD OTC", cat: "otc", payout: "+88%", symbol: null, price: 0.59120, digits: 5 },
-      { id: "xauusd_otc", name: "Gold / XAU OTC", cat: "otc", payout: "+90%", symbol: "PAXGUSDT", price: 2685.50, digits: 2 },
-      { id: "eurusd_live", name: "EUR / USD", cat: "otc", payout: "+85%", symbol: "EURUSDT", price: 1.08450, digits: 5 },
-      { id: "gbpusd_live", name: "GBP / USD", cat: "otc", payout: "+85%", symbol: "GBPUSDT", price: 1.27200, digits: 5 },
+    // Complete Pocket Option Asset Catalog (Forex OTC/Live, Crypto, Stocks, Commodities, Indices)
+    const POCKET_ASSETS = [
+      // 1. VALYUTA / FOREX (OTC & LIVE)
+      { id: "eurjpy_otc", name: "EUR/JPY OTC", cat: "forex", type: "OTC", payout: "+92%", symbol: null, price: 164.820, digits: 3 },
+      { id: "eurusd_otc", name: "EUR/USD OTC", cat: "forex", type: "OTC", payout: "+92%", symbol: "EURUSDT", price: 1.08420, digits: 5 },
+      { id: "gbpusd_otc", name: "GBP/USD OTC", cat: "forex", type: "OTC", payout: "+91%", symbol: "GBPUSDT", price: 1.27180, digits: 5 },
+      { id: "usdjpy_otc", name: "USD/JPY OTC", cat: "forex", type: "OTC", payout: "+91%", symbol: null, price: 153.440, digits: 3 },
+      { id: "audusd_otc", name: "AUD/USD OTC", cat: "forex", type: "OTC", payout: "+92%", symbol: "AUDUSDT", price: 0.65380, digits: 5 },
+      { id: "audcad_otc", name: "AUD/CAD OTC", cat: "forex", type: "OTC", payout: "+90%", symbol: null, price: 0.91040, digits: 5 },
+      { id: "audchf_otc", name: "AUD/CHF OTC", cat: "forex", type: "OTC", payout: "+89%", symbol: null, price: 0.57620, digits: 5 },
+      { id: "audjpy_otc", name: "AUD/JPY OTC", cat: "forex", type: "OTC", payout: "+90%", symbol: null, price: 100.320, digits: 3 },
+      { id: "cadchf_otc", name: "CAD/CHF OTC", cat: "forex", type: "OTC", payout: "+88%", symbol: null, price: 0.63280, digits: 5 },
+      { id: "cadjpy_otc", name: "CAD/JPY OTC", cat: "forex", type: "OTC", payout: "+89%", symbol: null, price: 110.180, digits: 3 },
+      { id: "chfjpy_otc", name: "CHF/JPY OTC", cat: "forex", type: "OTC", payout: "+90%", symbol: null, price: 174.120, digits: 3 },
+      { id: "euraud_otc", name: "EUR/AUD OTC", cat: "forex", type: "OTC", payout: "+90%", symbol: null, price: 1.65840, digits: 5 },
+      { id: "eurcad_otc", name: "EUR/CAD OTC", cat: "forex", type: "OTC", payout: "+89%", symbol: null, price: 1.50960, digits: 5 },
+      { id: "eurchf_otc", name: "EUR/CHF OTC", cat: "forex", type: "OTC", payout: "+88%", symbol: null, price: 0.95540, digits: 5 },
+      { id: "eurgbp_otc", name: "EUR/GBP OTC", cat: "forex", type: "OTC", payout: "+89%", symbol: null, price: 0.85260, digits: 5 },
+      { id: "eurnzd_otc", name: "EUR/NZD OTC", cat: "forex", type: "OTC", payout: "+88%", symbol: null, price: 1.83400, digits: 5 },
+      { id: "gbpaud_otc", name: "GBP/AUD OTC", cat: "forex", type: "OTC", payout: "+90%", symbol: null, price: 1.94520, digits: 5 },
+      { id: "gbpcad_otc", name: "GBP/CAD OTC", cat: "forex", type: "OTC", payout: "+89%", symbol: null, price: 1.77120, digits: 5 },
+      { id: "gbpchf_otc", name: "GBP/CHF OTC", cat: "forex", type: "OTC", payout: "+88%", symbol: null, price: 1.12050, digits: 5 },
+      { id: "gbpjpy_otc", name: "GBP/JPY OTC", cat: "forex", type: "OTC", payout: "+91%", symbol: null, price: 195.120, digits: 3 },
+      { id: "nzdjpy_otc", name: "NZD/JPY OTC", cat: "forex", type: "OTC", payout: "+88%", symbol: null, price: 90.710, digits: 3 },
+      { id: "nzdusd_otc", name: "NZD/USD OTC", cat: "forex", type: "OTC", payout: "+89%", symbol: null, price: 0.59120, digits: 5 },
+      { id: "usdcad_otc", name: "USD/CAD OTC", cat: "forex", type: "OTC", payout: "+90%", symbol: null, price: 1.39250, digits: 5 },
+      { id: "usdchf_otc", name: "USD/CHF OTC", cat: "forex", type: "OTC", payout: "+89%", symbol: null, price: 0.88120, digits: 5 },
+      { id: "usdtry_otc", name: "USD/TRY OTC", cat: "forex", type: "OTC", payout: "+87%", symbol: null, price: 34.450, digits: 3 },
+      { id: "usdinr_otc", name: "USD/INR OTC", cat: "forex", type: "OTC", payout: "+86%", symbol: null, price: 84.420, digits: 3 },
+      { id: "usdbrl_otc", name: "USD/BRL OTC", cat: "forex", type: "OTC", payout: "+86%", symbol: null, price: 5.7850, digits: 4 },
+      { id: "eurusd_live", name: "EUR/USD", cat: "forex", type: "LIVE", payout: "+86%", symbol: "EURUSDT", price: 1.08450, digits: 5 },
+      { id: "gbpusd_live", name: "GBP/USD", cat: "forex", type: "LIVE", payout: "+85%", symbol: "GBPUSDT", price: 1.27200, digits: 5 },
+      { id: "usdjpy_live", name: "USD/JPY", cat: "forex", type: "LIVE", payout: "+85%", symbol: null, price: 153.400, digits: 3 },
+      { id: "eurjpy_live", name: "EUR/JPY", cat: "forex", type: "LIVE", payout: "+84%", symbol: null, price: 164.800, digits: 3 },
 
-      // Kriptovalyuta
-      { id: "btc_otc", name: "Bitcoin OTC", cat: "crypto", payout: "+92%", symbol: "BTCUSDT", price: 92450.00, digits: 2 },
-      { id: "eth_otc", name: "Ethereum OTC", cat: "crypto", payout: "+91%", symbol: "ETHUSDT", price: 3182.40, digits: 2 },
-      { id: "sol_otc", name: "Solana OTC", cat: "crypto", payout: "+90%", symbol: "SOLUSDT", price: 215.80, digits: 2 },
-      { id: "ton_otc", name: "Toncoin OTC", cat: "crypto", payout: "+89%", symbol: "TONUSDT", price: 5.480, digits: 3 },
-      { id: "xrp_otc", name: "Ripple OTC", cat: "crypto", payout: "+90%", symbol: "XRPUSDT", price: 1.1420, digits: 4 },
-      { id: "bnb_otc", name: "BNB OTC", cat: "crypto", payout: "+88%", symbol: "BNBUSDT", price: 626.50, digits: 2 },
-      { id: "doge_otc", name: "Dogecoin OTC", cat: "crypto", payout: "+87%", symbol: "DOGEUSDT", price: 0.3840, digits: 4 },
+      // 2. KRİPTOVALYUTA
+      { id: "btc_otc", name: "Bitcoin OTC", cat: "crypto", type: "OTC", payout: "+92%", symbol: "BTCUSDT", price: 92450.00, digits: 2 },
+      { id: "btc_live", name: "Bitcoin (BTC/USD)", cat: "crypto", type: "LIVE", payout: "+88%", symbol: "BTCUSDT", price: 92480.00, digits: 2 },
+      { id: "eth_otc", name: "Ethereum OTC", cat: "crypto", type: "OTC", payout: "+91%", symbol: "ETHUSDT", price: 3182.40, digits: 2 },
+      { id: "eth_live", name: "Ethereum (ETH/USD)", cat: "crypto", type: "LIVE", payout: "+87%", symbol: "ETHUSDT", price: 3185.00, digits: 2 },
+      { id: "sol_otc", name: "Solana OTC", cat: "crypto", type: "OTC", payout: "+90%", symbol: "SOLUSDT", price: 215.80, digits: 2 },
+      { id: "ton_otc", name: "Toncoin OTC", cat: "crypto", type: "OTC", payout: "+90%", symbol: "TONUSDT", price: 5.480, digits: 3 },
+      { id: "xrp_otc", name: "Ripple OTC", cat: "crypto", type: "OTC", payout: "+89%", symbol: "XRPUSDT", price: 1.1420, digits: 4 },
+      { id: "bnb_otc", name: "BNB OTC", cat: "crypto", type: "OTC", payout: "+89%", symbol: "BNBUSDT", price: 626.50, digits: 2 },
+      { id: "doge_otc", name: "Dogecoin OTC", cat: "crypto", type: "OTC", payout: "+88%", symbol: "DOGEUSDT", price: 0.3840, digits: 4 },
+      { id: "ada_otc", name: "Cardano OTC", cat: "crypto", type: "OTC", payout: "+87%", symbol: "ADAUSDT", price: 0.7420, digits: 4 },
+      { id: "avax_otc", name: "Avalanche OTC", cat: "crypto", type: "OTC", payout: "+87%", symbol: "AVAXUSDT", price: 36.40, digits: 2 },
+      { id: "ltc_otc", name: "Litecoin OTC", cat: "crypto", type: "OTC", payout: "+86%", symbol: "LTCUSDT", price: 88.20, digits: 2 },
+      { id: "dot_otc", name: "Polkadot OTC", cat: "crypto", type: "OTC", payout: "+86%", symbol: "DOTUSDT", price: 6.150, digits: 3 },
+      { id: "link_otc", name: "Chainlink OTC", cat: "crypto", type: "OTC", payout: "+87%", symbol: "LINKUSDT", price: 14.85, digits: 2 },
 
-      // Səhmlər
-      { id: "aapl_otc", name: "Apple OTC", cat: "stocks", payout: "+92%", symbol: null, price: 228.60, digits: 2 },
-      { id: "tsla_otc", name: "Tesla OTC", cat: "stocks", payout: "+91%", symbol: null, price: 335.40, digits: 2 },
-      { id: "nvda_otc", name: "NVIDIA OTC", cat: "stocks", payout: "+92%", symbol: null, price: 142.90, digits: 2 },
-      { id: "amzn_otc", name: "Amazon OTC", cat: "stocks", payout: "+89%", symbol: null, price: 204.25, digits: 2 },
-      { id: "msft_otc", name: "Microsoft OTC", cat: "stocks", payout: "+90%", symbol: null, price: 422.80, digits: 2 },
-      { id: "meta_otc", name: "Meta OTC", cat: "stocks", payout: "+89%", symbol: null, price: 575.60, digits: 2 },
-      { id: "googl_otc", name: "Google OTC", cat: "stocks", payout: "+88%", symbol: null, price: 176.40, digits: 2 },
-      { id: "nflx_otc", name: "Netflix OTC", cat: "stocks", payout: "+87%", symbol: null, price: 865.10, digits: 2 }
+      // 3. SƏHMLƏR (STOCKS)
+      { id: "aapl_otc", name: "Apple OTC", cat: "stocks", type: "OTC", payout: "+92%", symbol: null, price: 228.60, digits: 2 },
+      { id: "tsla_otc", name: "Tesla OTC", cat: "stocks", type: "OTC", payout: "+92%", symbol: null, price: 335.40, digits: 2 },
+      { id: "nvda_otc", name: "NVIDIA OTC", cat: "stocks", type: "OTC", payout: "+92%", symbol: null, price: 142.90, digits: 2 },
+      { id: "amzn_otc", name: "Amazon OTC", cat: "stocks", type: "OTC", payout: "+90%", symbol: null, price: 204.25, digits: 2 },
+      { id: "msft_otc", name: "Microsoft OTC", cat: "stocks", type: "OTC", payout: "+90%", symbol: null, price: 422.80, digits: 2 },
+      { id: "meta_otc", name: "Meta OTC", cat: "stocks", type: "OTC", payout: "+90%", symbol: null, price: 575.60, digits: 2 },
+      { id: "googl_otc", name: "Google OTC", cat: "stocks", type: "OTC", payout: "+89%", symbol: null, price: 176.40, digits: 2 },
+      { id: "nflx_otc", name: "Netflix OTC", cat: "stocks", type: "OTC", payout: "+89%", symbol: null, price: 865.10, digits: 2 },
+      { id: "amd_otc", name: "AMD OTC", cat: "stocks", type: "OTC", payout: "+89%", symbol: null, price: 138.75, digits: 2 },
+      { id: "intc_otc", name: "Intel OTC", cat: "stocks", type: "OTC", payout: "+87%", symbol: null, price: 24.30, digits: 2 },
+      { id: "ba_otc", name: "Boeing OTC", cat: "stocks", type: "OTC", payout: "+87%", symbol: null, price: 148.20, digits: 2 },
+      { id: "mcd_otc", name: "McDonald's OTC", cat: "stocks", type: "OTC", payout: "+88%", symbol: null, price: 294.50, digits: 2 },
+      { id: "v_otc", name: "Visa OTC", cat: "stocks", type: "OTC", payout: "+88%", symbol: null, price: 309.40, digits: 2 },
+      { id: "ko_otc", name: "Coca-Cola OTC", cat: "stocks", type: "OTC", payout: "+87%", symbol: null, price: 63.80, digits: 2 },
+      { id: "dis_otc", name: "Disney OTC", cat: "stocks", type: "OTC", payout: "+87%", symbol: null, price: 114.20, digits: 2 },
+      { id: "baba_otc", name: "Alibaba OTC", cat: "stocks", type: "OTC", payout: "+88%", symbol: null, price: 89.40, digits: 2 },
+
+      // 4. ƏMTƏƏLƏR (COMMODITIES)
+      { id: "xauusd_otc", name: "Gold / XAU OTC", cat: "commodities", type: "OTC", payout: "+92%", symbol: "PAXGUSDT", price: 2685.50, digits: 2 },
+      { id: "xauusd_live", name: "Gold (XAU/USD)", cat: "commodities", type: "LIVE", payout: "+86%", symbol: "PAXGUSDT", price: 2686.10, digits: 2 },
+      { id: "xagusd_otc", name: "Silver / XAG OTC", cat: "commodities", type: "OTC", payout: "+90%", symbol: null, price: 31.420, digits: 3 },
+      { id: "ukoil_otc", name: "Brent Oil OTC", cat: "commodities", type: "OTC", payout: "+89%", symbol: null, price: 73.65, digits: 2 },
+      { id: "usoil_otc", name: "WTI Crude Oil OTC", cat: "commodities", type: "OTC", payout: "+89%", symbol: null, price: 69.80, digits: 2 },
+      { id: "ngas_otc", name: "Natural Gas OTC", cat: "commodities", type: "OTC", payout: "+87%", symbol: null, price: 2.940, digits: 3 },
+      { id: "xptusd_otc", name: "Platinum OTC", cat: "commodities", type: "OTC", payout: "+86%", symbol: null, price: 968.40, digits: 2 },
+
+      // 5. İNDEKSLƏR (INDICES)
+      { id: "us100_otc", name: "US100 (NASDAQ) OTC", cat: "indices", type: "OTC", payout: "+91%", symbol: null, price: 20840.5, digits: 1 },
+      { id: "sp500_otc", name: "S&P 500 OTC", cat: "indices", type: "OTC", payout: "+91%", symbol: null, price: 5965.2, digits: 1 },
+      { id: "us30_otc", name: "US30 (Dow Jones) OTC", cat: "indices", type: "OTC", payout: "+90%", symbol: null, price: 43890.0, digits: 1 },
+      { id: "ger30_otc", name: "DAX 30 (GER30) OTC", cat: "indices", type: "OTC", payout: "+89%", symbol: null, price: 19240.5, digits: 1 },
+      { id: "uk100_otc", name: "FTSE 100 (UK100) OTC", cat: "indices", type: "OTC", payout: "+88%", symbol: null, price: 8145.0, digits: 1 },
+      { id: "jpn225_otc", name: "Nikkei 225 OTC", cat: "indices", type: "OTC", payout: "+88%", symbol: null, price: 38620.0, digits: 1 }
     ];
+
+    const FAVORITES_KEY = "gpt_trading_favs_v1";
+    let savedFavs = [];
+    try {
+      savedFavs = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
+    } catch (e) {
+      savedFavs = ["eurjpy_otc", "xauusd_otc", "btc_otc", "aapl_otc"];
+    }
+    if (!Array.isArray(savedFavs) || savedFavs.length === 0) {
+      savedFavs = ["eurjpy_otc", "xauusd_otc", "btc_otc", "aapl_otc"];
+    }
 
     const state = {
       cat: "all",
@@ -679,23 +881,19 @@
       expLbl: "5 sec",
       remaining: 5,
       signal: null,
-      prices: [],
       history: [],
-      busy: false,
-      onlyOtc: false
+      busy: false
     };
 
-    const pairSelect = document.getElementById("pairSelect");
-    const searchInput = document.getElementById("searchInput");
+    const assetDropdown = document.getElementById("assetDropdown");
+    const searchBox = document.getElementById("searchBox");
 
     function pad2(n) {
       return String(Math.max(0, n)).padStart(2, "0");
     }
 
     function fmtSec(sec) {
-      const m = Math.floor(sec / 60);
-      const s = sec % 60;
-      return `${pad2(m)}:${pad2(s)}`;
+      return `${pad2(Math.floor(sec / 60))}:${pad2(sec % 60)}`;
     }
 
     function nowBaku() {
@@ -704,211 +902,231 @@
       return new Date(utc + 4 * 3600000).toTimeString().slice(0, 8);
     }
 
-    function normalizeStr(s) {
+    function cleanStr(s) {
       return (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     }
 
-    function getFilteredList() {
-      const qNorm = normalizeStr(state.query);
-      return ASSETS.filter(item => {
-        const catOk = state.cat === "all" || item.cat === state.cat;
-        const otcOk = !state.onlyOtc || item.name.toLowerCase().includes("otc");
-        const qOk = !qNorm || normalizeStr(item.name).includes(qNorm) || normalizeStr(item.id).includes(qNorm);
-        return catOk && otcOk && qOk;
+    function getFilteredAssets() {
+      const q = cleanStr(state.query);
+      return POCKET_ASSETS.filter(item => {
+        const catOk =
+          state.cat === "all" ||
+          (state.cat === "fav" ? savedFavs.includes(item.id) : item.cat === state.cat);
+        const searchOk = !q || cleanStr(item.name).includes(q) || cleanStr(item.id).includes(q);
+        return catOk && searchOk;
       });
     }
 
-    function syncDropdown(shouldAnalyze = false) {
-      const list = getFilteredList();
-      document.getElementById("catCountBadge").textContent = `${list.length} Aktiv`;
+    function updateFavButton() {
+      const btn = document.getElementById("favBtn");
+      const isFav = savedFavs.includes(state.pairId);
+      btn.classList.toggle("saved", isFav);
+      btn.textContent = isFav ? "★" : "☆";
+    }
 
-      pairSelect.innerHTML = "";
+    function syncAssetList(triggerAnalyze = false) {
+      const list = getFilteredAssets();
+      document.getElementById("assetCounter").textContent = `${list.length} Aktiv`;
+
+      assetDropdown.innerHTML = "";
       if (!list.length) {
         const opt = document.createElement("option");
         opt.value = "";
         opt.textContent = "Uyğun aktiv tapılmadı";
-        pairSelect.appendChild(opt);
+        assetDropdown.appendChild(opt);
         return;
       }
 
       list.forEach(item => {
         const opt = document.createElement("option");
         opt.value = item.id;
-        opt.textContent = item.name;
-        pairSelect.appendChild(opt);
+        opt.textContent = `${item.name} (${item.payout})`;
+        assetDropdown.appendChild(opt);
       });
 
       if (!list.some(x => x.id === state.pairId)) {
         state.pairId = list[0].id;
       }
-      pairSelect.value = state.pairId;
+      assetDropdown.value = state.pairId;
 
-      const active = ASSETS.find(x => x.id === state.pairId) || list[0];
-      document.getElementById("selectedLabel").textContent = `Seçilib: ${active.name}`;
-      document.getElementById("payoutLabel").textContent = `${active.payout} Payout`;
+      const current = POCKET_ASSETS.find(x => x.id === state.pairId) || list[0];
+      document.getElementById("chosenAssetName").textContent = current.name;
+      const badge = document.getElementById("chosenAssetType");
+      badge.textContent = current.type;
+      badge.className = current.type === "OTC" ? "otc-pill" : "live-pill";
+      document.getElementById("chosenPayout").textContent = `${current.payout} Payout`;
 
-      if (shouldAnalyze) {
-        runSignalEngine();
+      updateFavButton();
+
+      if (triggerAnalyze) {
+        analyzeMarket();
       }
     }
 
     function calcEMA(arr, period) {
       if (!arr.length) return 0;
       const k = 2 / (period + 1);
-      let val = arr[0];
-      for (let i = 1; i < arr.length; i++) {
-        val = arr[i] * k + val * (1 - k);
-      }
-      return val;
+      let v = arr[0];
+      for (let i = 1; i < arr.length; i++) v = arr[i] * k + v * (1 - k);
+      return v;
     }
 
     function calcRSI(arr, period = 14) {
-      if (arr.length < period + 1) return 45.0;
-      let gains = 0;
-      let losses = 0;
+      if (arr.length < period + 1) return 46.0;
+      let gains = 0, losses = 0;
       for (let i = arr.length - period; i < arr.length; i++) {
         const diff = arr[i] - arr[i - 1];
         if (diff >= 0) gains += diff;
         else losses += Math.abs(diff);
       }
-      if (losses === 0) return 79.4;
+      if (losses === 0) return 79.5;
       const rs = (gains / period) / (losses / period);
-      return Math.max(19.5, Math.min(82.5, 100 - (100 / (1 + rs))));
+      return Math.max(19.0, Math.min(83.0, 100 - 100 / (1 + rs)));
     }
 
-    function drawMiniChart(arr, side) {
-      const canvas = document.getElementById("chartCanvas");
+    function drawChart(prices, side) {
+      const canvas = document.getElementById("priceCanvas");
       const ctx = canvas.getContext("2d");
       const w = canvas.width;
       const h = canvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      if (arr.length < 2) return;
-      const min = Math.min(...arr);
-      const max = Math.max(...arr);
+      if (prices.length < 2) return;
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
       const span = (max - min) || 1;
 
       const isBuy = side === "BUY";
-      const stroke = isBuy ? "#22c55e" : "#ef4444";
-      const fill = isBuy ? "rgba(34, 197, 94, 0.16)" : "rgba(239, 68, 68, 0.16)";
+      const lineCol = isBuy ? "#34d399" : "#f87171";
+      const fillCol = isBuy ? "rgba(16, 185, 129, 0.16)" : "rgba(239, 68, 68, 0.16)";
+
+      // Grid lines
+      ctx.strokeStyle = "rgba(255,255,255,0.04)";
+      ctx.lineWidth = 1;
+      for (let g = 1; g <= 3; g++) {
+        const gy = (h / 4) * g;
+        ctx.beginPath();
+        ctx.moveTo(0, gy);
+        ctx.lineTo(w, gy);
+        ctx.stroke();
+      }
 
       ctx.beginPath();
-      arr.forEach((p, idx) => {
-        const x = (idx / (arr.length - 1)) * (w - 14) + 7;
+      prices.forEach((p, i) => {
+        const x = (i / (prices.length - 1)) * (w - 16) + 8;
         const y = h - 10 - ((p - min) / span) * (h - 20);
-        if (idx === 0) ctx.moveTo(x, y);
+        if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       });
-      ctx.strokeStyle = stroke;
-      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = lineCol;
+      ctx.lineWidth = 2.5;
       ctx.stroke();
 
-      ctx.lineTo(w - 7, h);
-      ctx.lineTo(7, h);
+      ctx.lineTo(w - 8, h);
+      ctx.lineTo(8, h);
       ctx.closePath();
-      ctx.fillStyle = fill;
+      ctx.fillStyle = fillCol;
       ctx.fill();
     }
 
-    async function loadPriceSeries(asset) {
+    async function fetchSeries(asset) {
       if (asset.symbol) {
         try {
-          const resp = await fetch(`https://api.binance.com/api/v3/klines?symbol=${asset.symbol}&interval=1m&limit=28`);
-          if (resp.ok) {
-            const rows = await resp.json();
-            const closes = rows.map(r => parseFloat(r[4])).filter(n => !Number.isNaN(n));
+          const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${asset.symbol}&interval=1m&limit=30`);
+          if (r.ok) {
+            const rows = await r.json();
+            const closes = rows.map(x => parseFloat(x[4])).filter(n => !Number.isNaN(n));
             if (closes.length >= 16) return closes;
           }
-        } catch (err) {}
+        } catch (e) {}
       }
 
-      const series = [];
-      let p = asset.price * (1 + (Math.random() - 0.5) * 0.002);
+      const arr = [];
+      let p = asset.price * (1 + (Math.random() - 0.5) * 0.0022);
       const step = asset.price * 0.00045;
-      for (let i = 0; i < 28; i++) {
+      for (let i = 0; i < 30; i++) {
         p += (Math.random() - 0.495) * step;
-        series.push(Number(p.toFixed(asset.digits)));
+        arr.push(Number(p.toFixed(asset.digits)));
       }
-      return series;
+      return arr;
     }
 
-    function renderRecent() {
-      const el = document.getElementById("historyList");
+    function renderHistory() {
+      const box = document.getElementById("historyList");
       if (!state.history.length) {
-        el.innerHTML = `<div class="history-row"><span style="color:var(--muted)">Hələ siqnal yoxdur</span><span>—</span></div>`;
+        box.innerHTML = `<div class="history-item"><span style="color:var(--muted)">Hələ siqnal yoxdur</span><span>—</span></div>`;
         return;
       }
-      el.innerHTML = state.history.slice(0, 6).map(item => {
-        const cls = item.side === "BUY" ? "h-buy" : "h-sell";
-        const icon = item.side === "BUY" ? "↗ BUY" : "↘ SELL";
+      box.innerHTML = state.history.slice(0, 6).map(h => {
+        const cls = h.side === "BUY" ? "tag-buy" : "tag-sell";
+        const arr = h.side === "BUY" ? "↗ BUY" : "↘ SELL";
         return `
-          <div class="history-row">
-            <span><b>${item.pair}</b> · ${item.code} (${item.time})</span>
-            <span class="${cls}">${icon} · ${item.strength}</span>
+          <div class="history-item">
+            <span><b>${h.pair}</b> · ${h.code} (${h.time})</span>
+            <span class="${cls}">${arr} · ${h.strengthPct}%</span>
           </div>
         `;
       }).join("");
     }
 
-    async function runSignalEngine() {
+    async function analyzeMarket() {
       if (state.busy) return;
-      const asset = ASSETS.find(x => x.id === state.pairId);
+      const asset = POCKET_ASSETS.find(x => x.id === state.pairId);
       if (!asset) return;
 
       state.busy = true;
-      const stage = document.getElementById("stageBox");
-      const icon = document.getElementById("dirIcon");
-      const word = document.getElementById("sigWord");
-      const scanStatus = document.getElementById("scanStatus");
+      const stage = document.getElementById("signalStage");
+      const orb = document.getElementById("dirOrb");
+      const dir = document.getElementById("sigDirection");
+      const scanLine = document.getElementById("scanLine");
 
-      stage.className = "stage";
-      icon.className = "dir-circle scan";
-      icon.textContent = "⟳";
-      word.className = "sig-word scan";
-      word.textContent = "Analyzing...";
+      stage.className = "signal-stage";
+      orb.className = "dir-orb scan";
+      orb.textContent = "⟳";
+      dir.className = "sig-direction scan";
+      dir.textContent = "Analyzing market...";
 
-      const phases = [
-        "Checking indicators...",
-        "Confirming trend...",
-        "Measuring momentum...",
-        "Calculating signal..."
+      const steps = [
+        "Checking RSI & EMA indicators...",
+        "Confirming trend structure...",
+        "Measuring candle momentum...",
+        "Finalizing signal..."
       ];
 
-      for (let i = 0; i < phases.length; i++) {
-        scanStatus.textContent = phases[i];
-        await new Promise(r => setTimeout(r, 150));
+      for (let i = 0; i < steps.length; i++) {
+        scanLine.textContent = steps[i];
+        await new Promise(r => setTimeout(r, 140));
       }
 
-      const prices = await loadPriceSeries(asset);
-      state.prices = prices;
-
-      const lastPrice = prices[prices.length - 1];
+      const prices = await fetchSeries(asset);
+      const lastQuote = prices[prices.length - 1];
       const rsi = calcRSI(prices, 14);
       const ema9 = calcEMA(prices.slice(-14), 9);
       const ema21 = calcEMA(prices, 21);
+      const macdVal = ema9 - ema21;
 
       let score = 0;
-      score += ema9 >= ema21 ? 1.1 : -1.1;
-      if (rsi > 53 && rsi < 74) score += 0.9;
-      else if (rsi < 47 && rsi > 26) score -= 0.9;
-      else if (rsi >= 74) score -= 1.0;
-      else if (rsi <= 26) score += 1.0;
+      score += macdVal >= 0 ? 1.15 : -1.15;
+      if (rsi > 53 && rsi < 74) score += 0.95;
+      else if (rsi < 47 && rsi > 26) score -= 0.95;
+      else if (rsi >= 74) score -= 1.05;
+      else if (rsi <= 26) score += 1.05;
 
-      score += (Math.random() - 0.5) * 0.7;
+      score += (Math.random() - 0.5) * 0.65;
 
       const isBuy = score >= 0;
       const side = isBuy ? "BUY" : "SELL";
       const arrow = isBuy ? "↗" : "↘";
-      const emaText = ema9 >= ema21 ? "EMA9 > EMA21" : "EMA9 < EMA21";
+      const emaStr = ema9 >= ema21 ? "EMA9 > EMA21" : "EMA9 < EMA21";
 
-      let strength = "medium";
-      let pct = 65;
+      let strengthName = "medium";
+      let strengthPct = 71;
       if (Math.abs(score) >= 1.75) {
-        strength = "strong";
-        pct = 86;
+        strengthName = "strong";
+        strengthPct = 87;
       } else if (Math.abs(score) < 0.75) {
-        strength = "low";
-        pct = 42;
+        strengthName = "low";
+        strengthPct = 56;
       }
 
       const tNow = nowBaku();
@@ -916,54 +1134,54 @@
 
       state.signal = {
         pair: asset.name,
+        type: asset.type,
         payout: asset.payout,
-        quote: lastPrice.toFixed(asset.digits),
+        quote: lastQuote.toFixed(asset.digits),
         code: state.expCode,
         duration: state.expLbl,
-        sec: state.expSec,
         side: side,
-        strength: strength,
-        pct: pct,
+        strengthName: strengthName,
+        strengthPct: strengthPct,
         rsi: rsi.toFixed(1),
-        ema: emaText,
+        ema: emaStr,
         time: tNow
       };
 
-      stage.className = "stage " + (isBuy ? "buy" : "sell");
-      icon.className = "dir-circle " + (isBuy ? "buy" : "sell");
-      icon.textContent = arrow;
-      word.className = "sig-word " + (isBuy ? "buy" : "sell");
-      word.textContent = side;
+      stage.className = "signal-stage " + (isBuy ? "buy" : "sell");
+      orb.className = "dir-orb " + (isBuy ? "buy" : "sell");
+      orb.textContent = arrow;
+      dir.className = "sig-direction " + (isBuy ? "buy" : "sell");
+      dir.textContent = side;
 
-      scanStatus.textContent = "";
-      document.getElementById("timerNum").textContent = fmtSec(state.remaining);
-      document.getElementById("timerCode").textContent = state.expCode;
-      document.getElementById("enterSub").textContent = `Enter within ${fmtSec(state.remaining)} · ${state.expLbl}`;
+      scanLine.textContent = "";
+      document.getElementById("cdTime").textContent = fmtSec(state.remaining);
+      document.getElementById("cdTag").textContent = state.expCode;
+      document.getElementById("sigWindow").textContent = `Enter within ${fmtSec(state.remaining)} · ${state.expLbl}`;
 
-      document.getElementById("strengthText").textContent = strength;
-      const bar = document.getElementById("strengthBar");
-      bar.style.width = `${pct}%`;
-      bar.style.background = isBuy
-        ? "linear-gradient(90deg, #10b981, #22c55e)"
+      document.getElementById("strengthVal").textContent = `${strengthName} (${strengthPct}%)`;
+      const fill = document.getElementById("meterFill");
+      fill.style.width = `${strengthPct}%`;
+      fill.style.background = isBuy
+        ? "linear-gradient(90deg, #10b981, #34d399)"
         : "linear-gradient(90deg, #f59e0b, #ef4444)";
 
-      document.getElementById("poBanner").textContent = `Open ${side} for ${state.expLbl} on PocketOption`;
+      document.getElementById("execBanner").textContent = `Open ${side} for ${state.expLbl} on PocketOption`;
 
-      document.getElementById("mRsi").textContent = rsi.toFixed(1);
-      document.getElementById("mEma").textContent = emaText;
-      document.getElementById("mPrice").textContent = lastPrice.toFixed(asset.digits);
-      document.getElementById("mTrend").textContent = isBuy ? "Bullish pressure" : "Bearish pressure";
+      document.getElementById("valRsi").textContent = rsi.toFixed(1);
+      document.getElementById("valEma").textContent = emaStr;
+      document.getElementById("valQuote").textContent = lastQuote.toFixed(asset.digits);
+      document.getElementById("valMacd").textContent = `${isBuy ? "Bullish" : "Bearish"} · ${macdVal >= 0 ? "+" : ""}${macdVal.toFixed(Math.min(4, asset.digits))}`;
 
-      drawMiniChart(prices, side);
+      drawChart(prices, side);
 
       state.history.unshift({
         pair: asset.name,
         code: state.expCode,
         side: side,
-        strength: strength,
+        strengthPct: strengthPct,
         time: tNow
       });
-      renderRecent();
+      renderHistory();
 
       state.busy = false;
       if (tg && tg.HapticFeedback) {
@@ -971,93 +1189,95 @@
       }
     }
 
+    // Live clock & countdown
     setInterval(() => {
-      document.getElementById("clockText").textContent = "UTC+4: " + nowBaku();
+      document.getElementById("bakuClock").textContent = nowBaku();
 
       if (!state.signal || state.busy) return;
       if (state.remaining > 0) {
         state.remaining -= 1;
-        document.getElementById("timerNum").textContent = fmtSec(state.remaining);
-        document.getElementById("enterSub").textContent =
-          `Enter within ${fmtSec(state.remaining)} · ${state.expLbl}`;
+        document.getElementById("cdTime").textContent = fmtSec(state.remaining);
+        document.getElementById("sigWindow").textContent = `Enter within ${fmtSec(state.remaining)} · ${state.expLbl}`;
       } else {
-        document.getElementById("timerNum").textContent = "00:00";
-        document.getElementById("enterSub").textContent = "Signal time is up";
+        document.getElementById("cdTime").textContent = "00:00";
+        document.getElementById("sigWindow").textContent = "Signal time is up";
       }
     }, 1000);
 
-    document.querySelectorAll("#catGrid .cat-btn").forEach(btn => {
+    // Category Tabs
+    document.querySelectorAll("#catStrip .cat-chip").forEach(btn => {
       btn.addEventListener("click", () => {
-        document.querySelectorAll("#catGrid .cat-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll("#catStrip .cat-chip").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         state.cat = btn.dataset.cat;
-        syncDropdown(true);
+        syncAssetList(true);
       });
     });
 
-    searchInput.addEventListener("input", () => {
-      state.query = searchInput.value;
-      syncDropdown(false);
+    // Search
+    searchBox.addEventListener("input", () => {
+      state.query = searchBox.value;
+      syncAssetList(false);
     });
 
-    searchInput.addEventListener("change", () => {
-      syncDropdown(true);
+    searchBox.addEventListener("change", () => {
+      syncAssetList(true);
     });
 
-    document.getElementById("clearSearchBtn").addEventListener("click", () => {
-      searchInput.value = "";
+    document.getElementById("clearSearch").addEventListener("click", () => {
+      searchBox.value = "";
       state.query = "";
-      syncDropdown(true);
+      syncAssetList(true);
     });
 
-    pairSelect.addEventListener("change", () => {
-      if (!pairSelect.value) return;
-      state.pairId = pairSelect.value;
-      syncDropdown(true);
+    // Dropdown selection
+    assetDropdown.addEventListener("change", () => {
+      if (!assetDropdown.value) return;
+      state.pairId = assetDropdown.value;
+      syncAssetList(true);
     });
 
-    document.querySelectorAll("#tfGrid .tf-btn").forEach(btn => {
+    // Favorite toggle
+    document.getElementById("favBtn").addEventListener("click", () => {
+      const idx = savedFavs.indexOf(state.pairId);
+      if (idx >= 0) savedFavs.splice(idx, 1);
+      else savedFavs.push(state.pairId);
+      try {
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(savedFavs));
+      } catch (e) {}
+      updateFavButton();
+      if (state.cat === "fav") syncAssetList(false);
+    });
+
+    // Expiration Timeframes
+    document.querySelectorAll("#expGrid .exp-btn").forEach(btn => {
       btn.addEventListener("click", () => {
-        document.querySelectorAll("#tfGrid .tf-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll("#expGrid .exp-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         state.expSec = Number(btn.dataset.sec);
         state.expCode = btn.dataset.code;
         state.expLbl = btn.dataset.lbl;
-        document.getElementById("tfActiveLabel").textContent = state.expLbl;
-        runSignalEngine();
+        document.getElementById("expDisplay").textContent = state.expLbl;
+        analyzeMarket();
       });
     });
 
-    document.getElementById("modeBtn").addEventListener("click", function () {
-      state.onlyOtc = !state.onlyOtc;
-      this.classList.toggle("active", state.onlyOtc);
-      this.textContent = state.onlyOtc ? "OTC Only" : "OTC + Live";
-      syncDropdown(true);
-    });
+    // Refresh
+    document.getElementById("refreshBtn").addEventListener("click", analyzeMarket);
 
-    document.getElementById("helpBtn").addEventListener("click", () => {
-      const txt = "1. Kateqoriya və ya axtarışdan cütlüyü/səhmi seç.\n2. S3–H1 vaxt intervalını seç.\n3. 'Enter within' vaxtı bitməmiş BUY/SELL siqnalına bax və ya 'Refresh signal' bas.";
-      if (tg && tg.showPopup) {
-        tg.showPopup({ title: "GPT trading — Help", message: txt, buttons: [{ type: "ok" }] });
-      } else {
-        alert(txt);
-      }
-    });
-
-    document.getElementById("refreshBtn").addEventListener("click", runSignalEngine);
-
+    // Send to Bot
     document.getElementById("sendBotBtn").addEventListener("click", () => {
       if (!state.signal) return;
-      const payload = JSON.stringify(state.signal);
       if (tg && typeof tg.sendData === "function") {
-        tg.sendData(payload);
+        tg.sendData(JSON.stringify(state.signal));
       } else {
         alert(
-          `${state.signal.side} | ${state.signal.pair} | ${state.signal.code} (${state.signal.duration})\nStrength: ${state.signal.strength}\nRSI(14): ${state.signal.rsi} | ${state.signal.ema}`
+          `${state.signal.side} | ${state.signal.pair} | ${state.signal.code} (${state.signal.duration})\nStrength: ${state.signal.strengthName} (${state.signal.strengthPct}%)\nRSI(14): ${state.signal.rsi} | ${state.signal.ema}`
         );
       }
     });
 
+    // Reset
     document.getElementById("resetBtn").addEventListener("click", () => {
       state.cat = "all";
       state.query = "";
@@ -1065,20 +1285,18 @@
       state.expSec = 5;
       state.expCode = "S5";
       state.expLbl = "5 sec";
-      state.onlyOtc = false;
-      searchInput.value = "";
-      document.getElementById("modeBtn").classList.remove("active");
-      document.getElementById("modeBtn").textContent = "OTC + Live";
-      document.getElementById("tfActiveLabel").textContent = "5 sec";
-      document.querySelectorAll("#catGrid .cat-btn").forEach(b => b.classList.toggle("active", b.dataset.cat === "all"));
-      document.querySelectorAll("#tfGrid .tf-btn").forEach(b => b.classList.toggle("active", b.dataset.code === "S5"));
-      syncDropdown(true);
+      searchBox.value = "";
+      document.getElementById("expDisplay").textContent = "5 sec";
+      document.querySelectorAll("#catStrip .cat-chip").forEach(b => b.classList.toggle("active", b.dataset.cat === "all"));
+      document.querySelectorAll("#expGrid .exp-btn").forEach(b => b.classList.toggle("active", b.dataset.code === "S5"));
+      syncAssetList(true);
     });
 
-    syncDropdown(false);
+    // Boot
+    document.getElementById("bakuClock").textContent = nowBaku();
+    syncAssetList(false);
     renderRecent();
-    document.getElementById("clockText").textContent = "UTC+4: " + nowBaku();
-    runSignalEngine();
+    analyzeMarket();
   </script>
 </body>
 </html>
